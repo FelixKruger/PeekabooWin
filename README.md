@@ -10,7 +10,7 @@ It gives you one automation engine with three ways to use it:
 - a local CLI for direct control and workflows
 - an MCP server so Claude Code and other AI tools can drive the same desktop actions
 
-PeekabooWin can capture windows and screens, index accessible UI controls, OCR visible text, click or scroll by label, type into apps, manage windows, and harvest long on-screen transcripts into local files that an AI can analyze afterward.
+PeekabooWin can capture windows and screens, index accessible UI controls, read visible text with OCR (optical character recognition — the same technology that lets your phone scan a document), click or scroll by label, type into apps, manage windows, and harvest long on-screen transcripts into local files that an AI can analyze afterward.
 
 ## Super Quick Start
 
