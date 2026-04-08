@@ -12,6 +12,20 @@ It gives you one automation engine with three ways to use it:
 
 PeekabooWin can capture windows and screens, index accessible UI controls, OCR visible text, click or scroll by label, type into apps, manage windows, and harvest long on-screen transcripts into local files that an AI can analyze afterward.
 
+## Super Quick Start
+
+Copy this prompt into Claude Code, Codex, or any AI coding agent:
+
+```text
+Clone https://github.com/FelixKruger/PeekabooWin and set it up.
+Run npm install, then npm test to verify everything works.
+Once tests pass, open a Notepad window with some text in it,
+then use the PeekabooWin MCP server to capture and OCR that window.
+Show me what PeekabooWin can see.
+```
+
+That's it. The repo includes a project `.mcp.json` so the agent picks up PeekabooWin automatically after cloning.
+
 ## Credit
 
 This project is directly inspired by Peter Steinberger's Peekaboo.
