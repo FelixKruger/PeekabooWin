@@ -3,8 +3,8 @@
 ## Getting Started
 
 ```powershell
-git clone https://github.com/FelixKruger/peekaboo-win.git
-cd peekaboo-win
+git clone https://github.com/FelixKruger/PeekabooWin.git
+cd PeekabooWin
 npm install
 npm test
 ```
