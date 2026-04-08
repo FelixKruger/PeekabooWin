@@ -128,6 +128,23 @@ then read that file and give me a concise summary plus action items.
 - Start with lower `maxSteps` while testing, then increase it.
 - Use disposable apps first, not your browser or work-critical apps.
 
+### Pattern 4: Harvest From Electron/GPU Apps (Discord, VS Code, Slack)
+
+Some apps render with GPU acceleration, which can cause window capture to fail silently. PeekabooWin handles this automatically with a three-tier capture fallback, but you can also help by:
+
+- Using `mode: "screen"` instead of `mode: "window"` if the target app has capture issues
+- Passing `fuzzyThreshold: 0.85` to tolerate minor OCR differences between scroll passes (screen-mode OCR varies slightly each capture)
+- Maximizing the target app before harvesting to reduce noise from other windows
+
+Example prompt:
+
+```text
+Use PeekabooWin to harvest the visible Discord window.
+Use screen mode, scroll up 10 times with fuzzyThreshold 0.85,
+and save the transcript to .\exports\discord-thread.txt.
+Then read that file and summarize the conversation.
+```
+
 ## Troubleshooting
 
 ### Claude cannot see the MCP server

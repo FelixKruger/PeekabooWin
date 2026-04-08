@@ -1,7 +1,7 @@
 # PeekabooWin
 
 <p align="center">
-  <img src="assets/hero.png" alt="PeekabooWin — Windows automation that sees the screen and does the clicks" width="700">
+  <img src="assets/hero.jpg" alt="PeekabooWin — Windows automation that sees the screen and does the clicks" width="700">
 </p>
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE) [![Node 22+](https://img.shields.io/badge/node-%3E%3D22-brightgreen.svg)](https://nodejs.org/) [![Windows](https://img.shields.io/badge/platform-Windows-0078D6.svg)](https://www.microsoft.com/windows)
