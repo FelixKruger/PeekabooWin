@@ -1,0 +1,2729 @@
+<html>
+  <head>
+    <title>PeekabooWin</title>
+    <meta http-equiv="x-ua-compatible" content="IE=11" />
+    <hta:application
+      applicationname="PeekabooWin"
+      border="thin"
+      caption="yes"
+      icon="mshta.exe"
+      maximizebutton="yes"
+      minimizebutton="yes"
+      navigable="no"
+      scroll="no"
+      showintaskbar="yes"
+      singleinstance="yes"
+      sysmenu="yes"
+      windowstate="normal"
+    />
+    <style type="text/css">
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: #09090b;
+        color: #f4f4f5;
+        font-family: "Segoe UI", "Segoe UI Variable Text", sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      #app {
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        padding: 12px;
+        overflow-y: auto;
+      }
+
+      .hero,
+      .card {
+        background: #111113;
+        border: 1px solid #27272a;
+        border-radius: 12px;
+        margin-bottom: 12px;
+      }
+
+      .hero {
+        padding: 12px 14px;
+        border-color: #3f3f46;
+      }
+
+      .hero h1 {
+        margin: 2px 0 0 0;
+        font-family: Georgia, serif;
+        font-size: 26px;
+        line-height: 1.1;
+        font-weight: 400;
+        letter-spacing: -0.02em;
+        color: #f4f4f5;
+      }
+
+      .eyebrow {
+        color: #a1a1aa;
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+
+      .hero-topline,
+      .hero-toolbar {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-align: center;
+        align-items: center;
+        gap: 12px;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+      }
+
+      .hero-topline {
+        -ms-flex-pack: justify;
+        justify-content: space-between;
+      }
+
+      .hero-toolbar {
+        margin-top: 10px;
+      }
+
+      .hero-copy {
+        -ms-flex: 1 1 240px;
+        flex: 1 1 240px;
+        min-width: 0;
+      }
+
+      .card {
+        padding: 14px;
+      }
+
+      .card h2 {
+        margin: 0 0 10px 0;
+        font-size: 18px;
+        line-height: 1.35;
+        font-weight: 700;
+        color: #f4f4f5;
+      }
+
+      .card p.note {
+        margin: 0 0 10px 0;
+        color: #a1a1aa;
+        max-width: 65ch;
+      }
+
+      .step-label {
+        display: inline-block;
+        min-width: 22px;
+        height: 22px;
+        border-radius: 999px;
+        background: rgba(59, 130, 246, 0.12);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        color: #60a5fa;
+        text-align: center;
+        font-size: 11px;
+        line-height: 22px;
+        font-weight: 700;
+        margin-right: 8px;
+        vertical-align: 2px;
+      }
+
+      .step-card {
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .step-header {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-align: center;
+        align-items: center;
+        -ms-flex-pack: justify;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        cursor: pointer;
+      }
+
+      .step-card.active .step-header,
+      .step-header:hover {
+        background: #151519;
+      }
+
+      .step-head-left {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-align: center;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .step-head-left .step-label {
+        margin-right: 0;
+        vertical-align: 0;
+        -ms-flex-negative: 0;
+        flex-shrink: 0;
+      }
+
+      .step-head-title {
+        font-size: 17px;
+        line-height: 1.35;
+        font-weight: 700;
+        color: #f4f4f5;
+      }
+
+      .step-summary {
+        font-size: 12px;
+        line-height: 1.4;
+        color: #a1a1aa;
+        text-align: right;
+        max-width: 180px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .step-body {
+        padding: 0 14px 14px 14px;
+        border-top: 1px solid #27272a;
+      }
+
+      .row {
+        margin-bottom: 10px;
+      }
+
+      .label {
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #a1a1aa;
+        margin-bottom: 6px;
+      }
+
+      .muted {
+        color: #a1a1aa;
+      }
+
+      .summary-strip {
+        display: -ms-flexbox;
+        display: flex;
+        gap: 8px;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+      }
+
+      .summary-strip .summary-box {
+        -ms-flex: 1 1 120px;
+        flex: 1 1 120px;
+        min-height: 58px;
+        box-sizing: border-box;
+        border-radius: 10px;
+        background: #1a1a1f;
+        border: 1px solid #27272a;
+        padding: 10px;
+      }
+
+      .summary-strip .summary-box.last {
+        margin-right: 0;
+      }
+
+      .summary-box .summary-title {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #71717a;
+        margin-bottom: 6px;
+        font-weight: 600;
+      }
+
+      .summary-box .summary-value {
+        font-size: 13px;
+        color: #f4f4f5;
+        word-break: break-word;
+      }
+
+      select,
+      input,
+      textarea {
+        width: 100%;
+        box-sizing: border-box;
+        border-radius: 8px;
+        border: 1px solid #3f3f46;
+        background: #111113;
+        color: #f4f4f5;
+        padding: 10px 12px;
+        font-family: inherit;
+        font-size: 14px;
+        outline: none;
+      }
+
+      textarea {
+        min-height: 96px;
+        resize: vertical;
+      }
+
+      select:focus,
+      input:focus,
+      textarea:focus {
+        border-color: #3b82f6;
+      }
+
+      input::-ms-input-placeholder,
+      textarea::-ms-input-placeholder {
+        color: #52525b;
+      }
+
+      .actions-inline .left {
+        float: none;
+        width: auto;
+        -ms-flex: 1 1 0;
+        flex: 1 1 0;
+      }
+
+      .actions-inline .right {
+        float: none;
+        width: auto;
+        -ms-flex: 1 1 0;
+        flex: 1 1 0;
+      }
+
+      .actions-inline {
+        display: -ms-flexbox;
+        display: flex;
+        gap: 12px;
+      }
+
+      button {
+        display: inline-block;
+        border: 1px solid #3f3f46;
+        border-radius: 8px;
+        min-height: 36px;
+        padding: 8px 12px;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        background: #3b82f6;
+        color: #f8fafc;
+      }
+
+      button.secondary {
+        background: #111113;
+        color: #f4f4f5;
+        border: 1px solid #3f3f46;
+      }
+
+      button.accent {
+        background: #3b82f6;
+        border-color: #3b82f6;
+        color: #f8fafc;
+      }
+
+      button.danger {
+        background: #7f1d1d;
+        border-color: #7f1d1d;
+        color: #fef2f2;
+      }
+
+      button.wide {
+        width: 100%;
+        margin-top: 4px;
+      }
+
+      button:disabled {
+        background: #18181b;
+        border-color: #27272a;
+        color: #52525b;
+        cursor: default;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid transparent;
+      }
+
+      .badge.good {
+        background: rgba(34, 197, 94, 0.12);
+        color: #86efac;
+        border-color: rgba(34, 197, 94, 0.24);
+      }
+
+      .badge.warn {
+        background: rgba(234, 179, 8, 0.12);
+        color: #fde047;
+        border-color: rgba(234, 179, 8, 0.24);
+      }
+
+      .badge.bad {
+        background: rgba(239, 68, 68, 0.12);
+        color: #fca5a5;
+        border-color: rgba(239, 68, 68, 0.24);
+      }
+
+      .preview-frame {
+        border-radius: 10px;
+        border: 1px solid #27272a;
+        background: #09090b;
+        padding: 12px;
+        text-align: center;
+        margin-bottom: 0;
+        min-height: 180px;
+      }
+
+      .preview-frame img {
+        max-width: 100%;
+        max-height: 240px;
+        border-radius: 8px;
+        border: 1px solid #27272a;
+        background: #18181b;
+        display: none;
+      }
+
+      #previewEmpty {
+        padding: 40px 18px;
+        color: #71717a;
+        font-size: 14px;
+      }
+
+      .element-list {
+        max-height: 180px;
+        overflow-y: auto;
+        border: 1px solid #27272a;
+        border-radius: 10px;
+        background: #111113;
+      }
+
+      .element-item {
+        padding: 11px 12px;
+        border-bottom: 1px solid #27272a;
+        cursor: pointer;
+      }
+
+      .element-item.last {
+        border-bottom: none;
+      }
+
+      .element-item.selected {
+        background: rgba(59, 130, 246, 0.12);
+        color: #eff6ff;
+        border-color: rgba(59, 130, 246, 0.24);
+      }
+
+      .element-name {
+        font-weight: 700;
+        margin-bottom: 2px;
+        word-break: break-word;
+      }
+
+      .element-meta {
+        font-size: 12px;
+        color: #71717a;
+      }
+
+      .element-item.selected .element-meta {
+        color: #bfdbfe;
+      }
+
+      .callout {
+        border-radius: 10px;
+        padding: 12px 14px;
+        background: #18181b;
+        border: 1px solid #27272a;
+        color: #e4e4e7;
+        margin-bottom: 12px;
+      }
+
+      .mini-actions {
+        display: -ms-flexbox;
+        display: flex;
+        gap: 8px;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+      }
+
+      .mini-actions button {
+        margin: 0;
+      }
+
+      #activityLog {
+        max-height: 180px;
+        overflow-y: auto;
+        border: 1px solid #27272a;
+        border-radius: 10px;
+        background: #09090b;
+        padding: 10px 12px;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 12px;
+        color: #d4d4d8;
+      }
+
+      .log-line {
+        margin-bottom: 8px;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .log-line.error {
+        color: #fca5a5;
+      }
+
+      .hint {
+        font-size: 12px;
+        color: #71717a;
+        margin-top: 6px;
+      }
+
+      .helper-bar {
+        border-radius: 10px;
+        padding: 10px 12px;
+        background: #18181b;
+        border: 1px solid #27272a;
+        color: #d4d4d8;
+        margin-bottom: 8px;
+      }
+
+      .chip-row {
+        display: -ms-flexbox;
+        display: flex;
+        gap: 8px;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        margin-top: 8px;
+      }
+
+      .chip-button {
+        background: #111113;
+        color: #f4f4f5;
+        border: 1px solid #3f3f46;
+      }
+
+      .section-kicker {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #71717a;
+        margin-bottom: 6px;
+        font-weight: 600;
+      }
+
+      .fine-print {
+        font-size: 12px;
+        color: #71717a;
+      }
+
+      .guide-pill {
+        border-radius: 10px;
+        padding: 10px 12px;
+        background: rgba(59, 130, 246, 0.12);
+        border: 1px solid rgba(59, 130, 246, 0.24);
+        color: #dbeafe;
+        font-weight: 600;
+        -ms-flex: 1 1 240px;
+        flex: 1 1 240px;
+        min-width: 0;
+      }
+
+      .advanced-panel,
+      .details-panel {
+        display: none;
+        margin-top: 8px;
+        border-top: 1px dashed #27272a;
+        padding-top: 10px;
+      }
+
+      .compact-tools {
+        margin-top: 4px;
+        margin-bottom: 10px;
+      }
+
+      .subpanel {
+        display: none;
+      }
+
+      .subpanel.active {
+        display: block;
+      }
+
+      .utility-card {
+        padding: 14px;
+      }
+
+      button:focus,
+      button:hover {
+        border-color: #52525b;
+      }
+
+      button.accent:focus,
+      button.accent:hover {
+        background: #2563eb;
+        border-color: #2563eb;
+      }
+
+      button.danger:focus,
+      button.danger:hover {
+        background: #991b1b;
+        border-color: #991b1b;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div class="hero">
+        <div class="hero-topline">
+          <div class="hero-copy">
+            <div class="eyebrow">PeekabooWin</div>
+            <h1>Use Windows apps with guided help.</h1>
+          </div>
+          <span id="statusBadge" class="badge warn">Checking setup...</span>
+        </div>
+        <div class="hero-toolbar">
+          <div class="guide-pill" id="guideMessage">
+            Start by choosing an app, then take a snapshot.
+          </div>
+          <button id="checkButton" class="secondary">Check setup</button>
+        </div>
+      </div>
+
+      <div class="card step-card active" id="step1Card">
+        <div class="step-header" id="step1Header">
+          <div class="step-head-left">
+            <span class="step-label">1</span>
+            <div class="step-head-title">Choose The App You Want Help With</div>
+          </div>
+          <div class="step-summary" id="step1Summary">No app selected</div>
+        </div>
+        <div class="step-body" id="step1Body">
+          <p class="note">
+            Pick one app window for most tasks. Use whole-screen capture only
+            when you need the bigger picture.
+          </p>
+          <div class="section-kicker">Quick start</div>
+          <div class="helper-bar">
+            New here? Open Notepad, choose it below, then take a snapshot.
+          </div>
+          <div class="chip-row">
+            <button id="practiceNotepadButton" class="chip-button">
+              Open Notepad
+            </button>
+            <button id="practiceCalculatorButton" class="chip-button">
+              Open Calculator
+            </button>
+            <button id="practiceSettingsButton" class="chip-button">
+              Open Paint
+            </button>
+          </div>
+          <div class="row">
+            <label class="label" for="captureScope"
+              >What should PeekabooWin look at?</label
+            >
+            <select id="captureScope">
+              <option value="window">One app window</option>
+              <option value="screen">My whole screen</option>
+            </select>
+          </div>
+          <div class="row" id="windowRow">
+            <label class="label" for="windowSelect">Choose an open app</label>
+            <select id="windowSelect"></select>
+            <div class="hint">
+              PeekabooWin hides most background windows so this list stays
+              readable.
+            </div>
+          </div>
+          <div class="row" id="windowFilterRow">
+            <label class="label" for="windowFilter">Find an app faster</label>
+            <input
+              id="windowFilter"
+              type="text"
+              placeholder="Type part of the app name or window title"
+            />
+          </div>
+          <div class="row" id="screenRow" style="display: none">
+            <label class="label" for="screenIndex">Choose a screen</label>
+            <select id="screenIndex"></select>
+          </div>
+          <div class="actions-inline">
+            <div class="left">
+              <button id="refreshWindowsButton" class="secondary wide">
+                Refresh app list
+              </button>
+            </div>
+            <div class="right">
+              <button id="focusWindowButton" class="secondary wide">
+                Bring this app forward
+              </button>
+            </div>
+          </div>
+          <div class="row" style="margin-top: 10px">
+            <button id="captureButton" class="accent wide">
+              Take a snapshot
+            </button>
+          </div>
+          <div class="mini-actions compact-tools">
+            <button id="toggleWindowToolsButton" class="secondary">
+              More app tools
+            </button>
+          </div>
+          <div class="details-panel" id="windowToolsPanel">
+            <div class="mini-actions">
+              <button id="maximizeWindowButton" class="secondary">
+                Maximize app
+              </button>
+              <button id="minimizeWindowButton" class="secondary">
+                Minimize app
+              </button>
+              <button id="closeAppButton" class="danger">Close app</button>
+            </div>
+            <div class="row" style="margin-top: 10px">
+              <label class="label" for="launchCommand">Open another app</label>
+              <input id="launchCommand" type="text" value="notepad.exe" />
+              <div class="hint">
+                If you are unsure what to type, the quick-start buttons above
+                are easier.
+              </div>
+            </div>
+            <button id="launchButton" class="secondary wide">
+              Open this app
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card step-card" id="step2Card">
+        <div class="step-header" id="step2Header">
+          <div class="step-head-left">
+            <span class="step-label">2</span>
+            <div class="step-head-title">Check What PeekabooWin Found</div>
+          </div>
+          <div class="step-summary" id="step2Summary">No snapshot yet</div>
+        </div>
+        <div class="step-body" id="step2Body" style="display: none">
+          <div class="summary-strip">
+            <div class="summary-box">
+              <div class="summary-title">Latest target</div>
+              <div class="summary-value" id="targetSummary">No capture yet</div>
+            </div>
+            <div class="summary-box">
+              <div class="summary-title">Snapshot</div>
+              <div class="summary-value" id="snapshotSummary">
+                No snapshot loaded
+              </div>
+            </div>
+            <div class="summary-box last">
+              <div class="summary-title">Actionable items</div>
+              <div class="summary-value" id="elementSummary">0 items ready</div>
+            </div>
+            <div class="summary-box last">
+              <div class="summary-title">Recognized text</div>
+              <div class="summary-value" id="ocrSummary">0 text lines</div>
+            </div>
+          </div>
+          <div class="row" style="margin-top: 12px">
+            <label class="label" for="snapshotSelect">Peekaboo snapshots</label>
+            <select id="snapshotSelect"></select>
+            <div class="hint">
+              Choosing a saved snapshot loads it right away.
+            </div>
+          </div>
+          <div class="mini-actions">
+            <button id="captureAgainButton" class="accent">
+              Retake snapshot
+            </button>
+            <button id="toggleSnapshotToolsButton" class="secondary">
+              More snapshot tools
+            </button>
+          </div>
+          <div class="details-panel" id="snapshotToolsPanel">
+            <div class="mini-actions">
+              <button id="openImageButton" class="secondary">
+                Open snapshot image
+              </button>
+              <button id="openSnapshotsFolderButton" class="secondary">
+                Open snapshot folder
+              </button>
+              <button id="cleanSnapshotsButton" class="secondary">
+                Delete day-old snapshots
+              </button>
+              <button id="deleteSnapshotButton" class="danger">
+                Delete this snapshot
+              </button>
+            </div>
+            <div class="fine-print">
+              These are cleanup tools. Most people will only need them
+              occasionally.
+            </div>
+          </div>
+          <div class="mini-actions compact-tools">
+            <button id="inspectControlsTab" class="accent">
+              Visible items
+            </button>
+            <button id="inspectTextTab" class="secondary">Read text</button>
+            <button id="inspectPreviewTab" class="secondary">
+              Preview image
+            </button>
+          </div>
+          <div class="subpanel active" id="inspectControlsPanel">
+            <div class="row">
+              <label class="label" for="elementFilter"
+                >Find something on the screen</label
+              >
+              <input
+                id="elementFilter"
+                type="text"
+                placeholder="Type button text, labels, or control names"
+              />
+            </div>
+            <div class="row">
+              <label class="label">Things PeekabooWin found</label>
+              <div id="elementList" class="element-list"></div>
+              <div class="hint">
+                Pick one item below if you want PeekabooWin to click or scroll
+                there for you.
+              </div>
+            </div>
+            <div class="fine-print">
+              If the list is empty or stale, check the Read text tab or take
+              another snapshot so PeekabooWin can refresh what it sees.
+            </div>
+          </div>
+          <div class="subpanel" id="inspectTextPanel">
+            <div class="row">
+              <label class="label" for="ocrTextBox"
+                >What PeekabooWin can read</label
+              >
+              <textarea
+                id="ocrTextBox"
+                readonly="readonly"
+                placeholder="Take a snapshot and PeekabooWin will show the text it recognized on the screen."
+              ></textarea>
+              <div class="hint">
+                This is especially useful when buttons or labels are visible on
+                screen but do not appear as indexed controls.
+              </div>
+            </div>
+          </div>
+          <div class="subpanel" id="inspectPreviewPanel">
+            <div class="preview-frame">
+              <img id="previewImage" alt="Latest annotated capture" />
+              <div id="previewEmpty">
+                Take a snapshot and you will see a marked-up preview here.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card step-card" id="step3Card">
+        <div class="step-header" id="step3Header">
+          <div class="step-head-left">
+            <span class="step-label">3</span>
+            <div class="step-head-title">Take The Next Action</div>
+          </div>
+          <div class="step-summary" id="step3Summary">
+            Take a snapshot first
+          </div>
+        </div>
+        <div class="step-body" id="step3Body" style="display: none">
+          <div class="mini-actions compact-tools">
+            <button id="actionClickTab" class="accent">Click</button>
+            <button id="actionTypeTab" class="secondary">Type</button>
+            <button id="actionAiTab" class="secondary">Ask AI</button>
+          </div>
+          <div class="subpanel active" id="actionClickPanel">
+            <div class="callout" id="selectionCallout">
+              No item is selected yet. Pick one above if you want PeekabooWin to
+              click or scroll there for you.
+            </div>
+            <div class="mini-actions">
+              <button id="clickElementButton">Click selected item</button>
+              <button id="scrollDownButton" class="secondary">
+                Scroll down there
+              </button>
+              <button id="scrollUpButton" class="secondary">
+                Scroll up there
+              </button>
+            </div>
+          </div>
+          <div class="subpanel" id="actionTypePanel">
+            <div class="row">
+              <label class="label" for="typeText"
+                >Type words into the current app</label
+              >
+              <textarea
+                id="typeText"
+                placeholder="Write what you want PeekabooWin to type into the chosen app."
+              ></textarea>
+              <div class="hint">
+                PeekabooWin brings the chosen app forward first so the text
+                lands in the right place.
+              </div>
+            </div>
+            <div class="actions-inline">
+              <div class="left">
+                <button id="typeButton" class="accent wide">
+                  Type this text
+                </button>
+              </div>
+              <div class="right">
+                <button id="clearTypeButton" class="secondary wide">
+                  Replace existing text
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="subpanel" id="actionAiPanel">
+            <p class="note">
+              After a snapshot, PeekabooWin can prepare a ready-to-paste summary
+              for another assistant.
+            </p>
+            <div class="row">
+              <textarea
+                id="aiBrief"
+                placeholder="Take a snapshot first and PeekabooWin will prepare a ready-to-paste summary."
+              ></textarea>
+            </div>
+            <div class="mini-actions">
+              <button id="copyBriefButton" class="accent">
+                Copy summary for AI
+              </button>
+              <button id="showAdvancedButton" class="secondary">
+                Show advanced options
+              </button>
+            </div>
+            <div class="advanced-panel" id="advancedPanel">
+              <div class="mini-actions">
+                <button id="copyClickCommandButton" class="secondary">
+                  Copy click example
+                </button>
+                <button id="copyMcpButton" class="secondary">
+                  Copy advanced connection command
+                </button>
+              </div>
+            </div>
+            <div class="fine-print">
+              Most people will only need the first button here.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card utility-card">
+        <h2>Details</h2>
+        <p class="note">
+          You usually will not need this, but it can help if something looks
+          stuck.
+        </p>
+        <div class="mini-actions compact-tools">
+          <button id="toggleLogButton" class="secondary">
+            Show recent steps
+          </button>
+        </div>
+        <div class="details-panel" id="activityPanel">
+          <div id="activityLog"></div>
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript">
+      var state = {
+        appRoot: "",
+        cliPath: "",
+        mcpPath: "",
+        snapshotsDir: "",
+        screens: [],
+        windows: [],
+        snapshots: [],
+        currentElements: [],
+        currentTargets: [],
+        currentOcrLines: [],
+        currentSnapshot: null,
+        currentBrief: null,
+        selectedElementId: "",
+        lastWindowHwnd: "",
+        activeStep: 1,
+        inspectView: "controls",
+        actionView: "click",
+        isBusy: false,
+      };
+
+      window.onload = function () {
+        try {
+          bootstrapWindow();
+          bindEvents();
+          openStep(1);
+          setInspectView("controls");
+          setActionView("click");
+          updateStepSummaries();
+          appendLog("PeekabooWin opened. Checking the local CLI...");
+          checkConnection();
+          refreshWindows();
+          refreshSnapshots(false);
+        } catch (error) {
+          setStatus("Could not start the UI", "bad");
+          appendLog(readError(error), "error");
+        }
+      };
+
+      function bootstrapWindow() {
+        state.appRoot = detectAppRoot();
+        state.cliPath = joinPath(state.appRoot, "bin\\peekaboo-win.js");
+        state.mcpPath = joinPath(state.appRoot, "bin\\peekaboo-win-mcp.js");
+        state.snapshotsDir = expandEnvironment(
+          "%USERPROFILE%\\.peekaboo-windows\\snapshots",
+        );
+        document.title = "PeekabooWin";
+
+        try {
+          window.resizeTo(620, Math.min(screen.availHeight - 24, 1080));
+          window.moveTo(Math.max(0, screen.availWidth - 640), 12);
+        } catch (error) {}
+      }
+
+      function bindEvents() {
+        byId("checkButton").onclick = function () {
+          checkConnection();
+        };
+
+        byId("step1Header").onclick = function () {
+          openStep(1);
+        };
+
+        byId("step2Header").onclick = function () {
+          openStep(2);
+        };
+
+        byId("step3Header").onclick = function () {
+          openStep(3);
+        };
+
+        byId("practiceNotepadButton").onclick = function () {
+          launchPreset("notepad.exe", "Notepad", "Notepad");
+        };
+
+        byId("practiceCalculatorButton").onclick = function () {
+          launchPreset("calc.exe", "Calculator", "Calculator");
+        };
+
+        byId("practiceSettingsButton").onclick = function () {
+          launchPreset("mspaint.exe", "Paint", "Paint");
+        };
+
+        byId("captureScope").onchange = function () {
+          updateScopeVisibility();
+          updateStepSummaries();
+        };
+
+        byId("windowSelect").onchange = function () {
+          state.lastWindowHwnd = byId("windowSelect").value;
+          updateStepSummaries();
+        };
+
+        byId("windowFilter").onkeyup = function () {
+          renderWindowOptions();
+        };
+
+        byId("elementFilter").onkeyup = function () {
+          renderElementList(state.currentTargets || []);
+        };
+
+        byId("refreshWindowsButton").onclick = function () {
+          refreshWindows();
+        };
+
+        byId("focusWindowButton").onclick = function () {
+          focusSelectedWindow();
+        };
+
+        byId("captureButton").onclick = function () {
+          captureSelection();
+        };
+
+        byId("captureAgainButton").onclick = function () {
+          captureSelection();
+        };
+
+        byId("openImageButton").onclick = function () {
+          openCurrentImage();
+        };
+
+        byId("openSnapshotsFolderButton").onclick = function () {
+          openPath(state.snapshotsDir);
+        };
+
+        byId("cleanSnapshotsButton").onclick = function () {
+          cleanOldSnapshots();
+        };
+
+        byId("deleteSnapshotButton").onclick = function () {
+          deleteCurrentSnapshot();
+        };
+
+        byId("clickElementButton").onclick = function () {
+          setActionView("click");
+          clickSelectedElement();
+        };
+
+        byId("scrollDownButton").onclick = function () {
+          setActionView("click");
+          scrollSelectedElement("down");
+        };
+
+        byId("scrollUpButton").onclick = function () {
+          setActionView("click");
+          scrollSelectedElement("up");
+        };
+
+        byId("typeButton").onclick = function () {
+          setActionView("type");
+          typeIntoWindow(false);
+        };
+
+        byId("clearTypeButton").onclick = function () {
+          setActionView("type");
+          typeIntoWindow(true);
+        };
+
+        byId("launchButton").onclick = function () {
+          openStep(1);
+          launchApp();
+        };
+
+        byId("maximizeWindowButton").onclick = function () {
+          setSelectedWindowState("maximize");
+        };
+
+        byId("minimizeWindowButton").onclick = function () {
+          setSelectedWindowState("minimize");
+        };
+
+        byId("closeAppButton").onclick = function () {
+          closeSelectedApp();
+        };
+
+        byId("copyBriefButton").onclick = function () {
+          setActionView("ai");
+          if (!state.currentBrief || !state.currentBrief.text) {
+            appendLog(
+              "There is no AI brief yet. Capture a window first.",
+              "error",
+            );
+            return;
+          }
+
+          copyText(state.currentBrief.text);
+          appendLog("Copied the AI brief to the clipboard.");
+          setGuide(
+            "Paste that summary into your AI, or come back here and keep controlling the app yourself.",
+          );
+        };
+
+        byId("copyMcpButton").onclick = function () {
+          copyText('node "' + state.mcpPath + '"');
+          appendLog("Copied the MCP launch command.");
+        };
+
+        byId("copyClickCommandButton").onclick = function () {
+          if (!state.currentBrief || !state.currentBrief.clickExample) {
+            appendLog(
+              "There is no click example yet because no indexed control is available.",
+              "error",
+            );
+            return;
+          }
+
+          copyText(state.currentBrief.clickExample);
+          appendLog("Copied a click example command.");
+        };
+
+        byId("showAdvancedButton").onclick = function () {
+          setActionView("ai");
+          toggleAdvancedPanel();
+        };
+
+        byId("inspectControlsTab").onclick = function () {
+          setInspectView("controls");
+        };
+
+        byId("inspectTextTab").onclick = function () {
+          setInspectView("text");
+        };
+
+        byId("inspectPreviewTab").onclick = function () {
+          setInspectView("preview");
+        };
+
+        byId("actionClickTab").onclick = function () {
+          openStep(3);
+          setActionView("click");
+        };
+
+        byId("actionTypeTab").onclick = function () {
+          openStep(3);
+          setActionView("type");
+        };
+
+        byId("actionAiTab").onclick = function () {
+          openStep(3);
+          setActionView("ai");
+        };
+
+        byId("toggleWindowToolsButton").onclick = function () {
+          togglePanel(
+            "windowToolsPanel",
+            "toggleWindowToolsButton",
+            "More app tools",
+            "Hide app tools",
+          );
+        };
+
+        byId("toggleSnapshotToolsButton").onclick = function () {
+          togglePanel(
+            "snapshotToolsPanel",
+            "toggleSnapshotToolsButton",
+            "More snapshot tools",
+            "Hide snapshot tools",
+          );
+        };
+
+        byId("toggleLogButton").onclick = function () {
+          togglePanel(
+            "activityPanel",
+            "toggleLogButton",
+            "Show recent steps",
+            "Hide recent steps",
+          );
+        };
+
+        byId("snapshotSelect").onchange = function () {
+          clearElementSelection();
+          if (byId("snapshotSelect").value) {
+            loadSelectedSnapshot();
+          }
+        };
+
+        byId("typeText").onfocus = function () {
+          openStep(3);
+          setActionView("type");
+        };
+
+        byId("aiBrief").onfocus = function () {
+          openStep(3);
+          setActionView("ai");
+        };
+
+        updateScopeVisibility();
+        updateStepSummaries();
+      }
+
+      function checkConnection() {
+        try {
+          setStatus("Checking setup...", "warn");
+          var result = runCliJson(["windows", "list"]);
+          setStatus("Ready for desktop control", "good");
+          appendLog(
+            "Connected to PeekabooWin. " +
+              result.windows.length +
+              " windows were reported.",
+          );
+          loadScreens();
+        } catch (error) {
+          setStatus("PeekabooWin CLI is not reachable", "bad");
+          appendLog(readError(error), "error");
+        }
+      }
+
+      function loadScreens() {
+        var result = runCliJson(["screens", "list"]);
+        state.screens = result.screens || [];
+        renderScreenOptions();
+      }
+
+      function refreshWindows() {
+        withBusy("Refreshing visible windows...", function () {
+          var result = runCliJson(["windows", "list"]);
+          state.windows = filterFriendlyWindows(result.windows || []);
+          renderWindowOptions();
+          appendLog(
+            "Window list refreshed. " +
+              state.windows.length +
+              " likely user-facing windows available.",
+          );
+        });
+
+        updateStepSummaries();
+      }
+
+      function refreshSnapshots(loadLatest) {
+        var latestSnapshotId = "";
+
+        withBusy("Refreshing saved captures...", function () {
+          var result = runCliJson(["snapshot", "list", "--limit", "12"]);
+          state.snapshots = filterUiSnapshots(result.snapshots || []);
+          renderSnapshotOptions();
+          updateStepSummaries();
+          appendLog(
+            "Loaded " + state.snapshots.length + " recent Peekaboo snapshots.",
+          );
+
+          if (loadLatest && state.snapshots.length > 0) {
+            latestSnapshotId = state.snapshots[0].snapshotId;
+            byId("snapshotSelect").value = latestSnapshotId;
+          }
+        });
+
+        if (loadLatest && latestSnapshotId) {
+          loadSnapshot(latestSnapshotId);
+        }
+      }
+
+      function focusSelectedWindow() {
+        var windowItem = getSelectedWindow();
+
+        if (!windowItem) {
+          appendLog("Pick a visible window first.", "error");
+          return;
+        }
+
+        withBusy("Bringing the app forward...", function () {
+          runCliJson(["window", "focus", "--hwnd", windowItem.hwnd]);
+          appendLog('Brought "' + windowItem.title + '" to the front.');
+          setGuide(
+            "Now click Take a snapshot so PeekabooWin can see what is on that app.",
+          );
+        });
+      }
+
+      function setSelectedWindowState(stateName) {
+        var windowItem = getSelectedWindow();
+
+        if (!windowItem) {
+          appendLog("Pick a visible window first.", "error");
+          return;
+        }
+
+        withBusy("Updating the app window...", function () {
+          runCliJson([
+            "window",
+            "state",
+            "--hwnd",
+            windowItem.hwnd,
+            "--state",
+            stateName,
+          ]);
+          appendLog('Set "' + windowItem.title + '" to ' + stateName + ".");
+        });
+      }
+
+      function closeSelectedApp() {
+        var windowItem = getSelectedWindow();
+        var result = null;
+
+        if (!windowItem) {
+          appendLog("Pick a visible window first.", "error");
+          return;
+        }
+
+        if (
+          !window.confirm(
+            'Close "' +
+              windowItem.title +
+              '"? Unsaved work in that app could be lost.',
+          )
+        ) {
+          return;
+        }
+
+        withBusy("Closing the selected app...", function () {
+          result = runCliJson([
+            "app",
+            "quit",
+            "--process-id",
+            String(windowItem.processId),
+          ]);
+          appendLog('Sent a close request to "' + windowItem.title + '".');
+        });
+
+        refreshWindows();
+
+        if (result && result.exited === false) {
+          setGuide(
+            "The app received the close request, but Windows reported that it is still open. It may be waiting for confirmation.",
+          );
+        } else {
+          setGuide(
+            "The close request was sent. Refresh the app list if you still see the window.",
+          );
+        }
+      }
+
+      function captureSelection() {
+        var scope = byId("captureScope").value;
+        var args;
+        var label;
+        var snapshotId = "";
+
+        if (scope === "screen") {
+          args = [
+            "see",
+            "--mode",
+            "screen",
+            "--screen-index",
+            byId("screenIndex").value,
+          ];
+          label = "screen " + byId("screenIndex").value;
+        } else {
+          var windowItem = getSelectedWindow();
+
+          if (!windowItem) {
+            appendLog("Pick a visible window before capturing.", "error");
+            return;
+          }
+
+          args = ["see", "--mode", "window", "--hwnd", windowItem.hwnd];
+          label = windowItem.title;
+          state.lastWindowHwnd = windowItem.hwnd;
+        }
+
+        withBusy("Capturing what Peekaboo sees...", function () {
+          var result = runCliJson(args);
+          snapshotId = result.snapshotId;
+          appendLog(
+            'Captured "' + label + '" as snapshot ' + result.snapshotId + ".",
+          );
+        });
+
+        if (snapshotId) {
+          refreshSnapshots(false);
+          byId("snapshotSelect").value = snapshotId;
+          loadSnapshot(snapshotId);
+          setGuide(
+            "Snapshot ready. Pick something PeekabooWin can see, or copy the summary for your AI.",
+          );
+        }
+      }
+
+      function loadSelectedSnapshot() {
+        var snapshotId = byId("snapshotSelect").value;
+
+        if (!snapshotId) {
+          appendLog("There is no capture selected yet.", "error");
+          return;
+        }
+
+        loadSnapshot(snapshotId);
+      }
+
+      function loadSnapshot(snapshotId) {
+        withBusy("Loading the selected capture...", function () {
+          var snapshot = runCliJson([
+            "snapshot",
+            "show",
+            "--snapshot",
+            snapshotId,
+          ]);
+          var brief = runCliJson(["ai", "brief", "--snapshot", snapshotId]);
+          state.currentSnapshot = snapshot;
+          state.currentBrief = brief;
+          renderSnapshot(snapshot, brief);
+          appendLog("Loaded snapshot " + snapshotId + ".");
+        });
+      }
+
+      function deleteCurrentSnapshot() {
+        var snapshotId = byId("snapshotSelect").value;
+
+        if (!snapshotId) {
+          appendLog("Pick a snapshot first.", "error");
+          return;
+        }
+
+        if (
+          !window.confirm("Delete this snapshot and its saved image files?")
+        ) {
+          return;
+        }
+
+        withBusy("Deleting the selected snapshot...", function () {
+          runCliJson(["snapshot", "clean", "--snapshot", snapshotId]);
+          appendLog("Deleted snapshot " + snapshotId + ".");
+        });
+
+        state.currentSnapshot = null;
+        state.currentBrief = null;
+        state.currentElements = [];
+        state.currentTargets = [];
+        state.currentOcrLines = [];
+        byId("aiBrief").value = "";
+        byId("targetSummary").innerText = "No capture yet";
+        byId("snapshotSummary").innerText = "No snapshot loaded";
+        byId("elementSummary").innerText = "0 items ready";
+        byId("ocrSummary").innerText = "0 text lines";
+        byId("ocrTextBox").value = "";
+        renderPreviewImage("");
+        renderElementList([]);
+        setInspectView("controls");
+        setActionView("click");
+        openStep(1);
+        updateStepSummaries();
+        refreshSnapshots(true);
+        setGuide(
+          "Snapshot deleted. Take another snapshot whenever you are ready.",
+        );
+      }
+
+      function cleanOldSnapshots() {
+        var result = null;
+
+        if (
+          !window.confirm(
+            "Delete snapshots older than one day to keep the folder tidy?",
+          )
+        ) {
+          return;
+        }
+
+        withBusy("Deleting older snapshots...", function () {
+          result = runCliJson([
+            "snapshot",
+            "clean",
+            "--older-than-hours",
+            "24",
+          ]);
+          appendLog("Deleted " + result.count + " older snapshots.");
+        });
+
+        refreshSnapshots(true);
+        setGuide(
+          "Old snapshots cleaned up. Your recent captures are still ready to use.",
+        );
+      }
+
+      function renderWindowOptions() {
+        var select = byId("windowSelect");
+        var currentValue = select.value;
+        var filterText = trimText(byId("windowFilter").value).toLowerCase();
+        select.options.length = 0;
+
+        var visibleWindows = [];
+        var index;
+
+        for (index = 0; index < state.windows.length; index += 1) {
+          var item = state.windows[index];
+          var label = buildWindowLabel(item);
+
+          if (filterText && label.toLowerCase().indexOf(filterText) === -1) {
+            continue;
+          }
+
+          visibleWindows[visibleWindows.length] = item;
+        }
+
+        visibleWindows.sort(compareWindowsForPicker);
+
+        if (!visibleWindows.length) {
+          select.options[0] = new Option(
+            filterText
+              ? "No apps match that search"
+              : "No visible windows found",
+            "",
+          );
+          return;
+        }
+
+        for (index = 0; index < visibleWindows.length; index += 1) {
+          var item = visibleWindows[index];
+          var label = buildWindowLabel(item);
+          select.options[select.options.length] = new Option(label, item.hwnd);
+        }
+
+        if (currentValue) {
+          select.value = currentValue;
+        }
+
+        if (!select.value && state.lastWindowHwnd) {
+          select.value = state.lastWindowHwnd;
+        }
+
+        if (!select.value && select.options.length > 0) {
+          select.selectedIndex = 0;
+        }
+
+        updateStepSummaries();
+      }
+
+      function renderScreenOptions() {
+        var select = byId("screenIndex");
+        select.options.length = 0;
+
+        if (!state.screens.length) {
+          select.options[0] = new Option("Screen 1", "0");
+          return;
+        }
+
+        var index;
+
+        for (index = 0; index < state.screens.length; index += 1) {
+          var screenItem = state.screens[index];
+          var label = "Screen " + String(screenItem.index + 1);
+
+          if (screenItem.isPrimary) {
+            label += " (main)";
+          }
+
+          if (screenItem.bounds) {
+            label +=
+              " - " +
+              screenItem.bounds.width +
+              " x " +
+              screenItem.bounds.height;
+          }
+
+          select.options[select.options.length] = new Option(
+            label,
+            String(screenItem.index),
+          );
+        }
+      }
+
+      function renderSnapshotOptions() {
+        var select = byId("snapshotSelect");
+        var currentValue = select.value;
+        select.options.length = 0;
+
+        if (!state.snapshots.length) {
+          select.options[0] = new Option("No Peekaboo snapshots yet", "");
+          return;
+        }
+
+        var index;
+
+        for (index = 0; index < state.snapshots.length; index += 1) {
+          var item = state.snapshots[index];
+          var label = formatSnapshotOption(item);
+          select.options[select.options.length] = new Option(
+            label,
+            item.snapshotId,
+          );
+        }
+
+        if (currentValue) {
+          select.value = currentValue;
+        }
+      }
+
+      function renderSnapshot(snapshot, brief) {
+        var result = snapshot.result || {};
+        var target = result.target || {};
+        var targetText =
+          target.title ||
+          (result.mode === "screen" ? "Whole screen" : "Unknown window");
+
+        state.currentElements = result.elements || [];
+        state.currentOcrLines =
+          result.ocr && result.ocr.lines ? result.ocr.lines : [];
+        state.currentTargets = buildActionTargets(result);
+        byId("targetSummary").innerText = targetText;
+        byId("snapshotSummary").innerText = snapshot.snapshotId;
+        byId("elementSummary").innerText =
+          String(state.currentTargets.length) + " items ready";
+        byId("ocrSummary").innerText =
+          String(state.currentOcrLines.length) + " text lines";
+        byId("aiBrief").value = brief && brief.text ? brief.text : "";
+
+        renderPreviewImage(result.annotatedPath || result.path || "");
+        renderElementList(state.currentTargets);
+        renderOcrText(result.ocr || {});
+        clearElementSelection();
+        setInspectView(
+          state.currentTargets.length
+            ? "controls"
+            : state.currentOcrLines.length
+              ? "text"
+              : "preview",
+        );
+        setActionView(state.currentTargets.length ? "click" : "type");
+        openStep(2);
+        updateStepSummaries();
+      }
+
+      function renderPreviewImage(filePath) {
+        var image = byId("previewImage");
+        var empty = byId("previewEmpty");
+
+        if (!filePath) {
+          image.style.display = "none";
+          empty.style.display = "block";
+          return;
+        }
+
+        image.src = toFileUrl(filePath) + "?ts=" + String(new Date().getTime());
+        image.style.display = "inline";
+        empty.style.display = "none";
+      }
+
+      function renderOcrText(ocr) {
+        var lines = ocr && ocr.lines ? ocr.lines : [];
+        var output = [];
+        var index;
+
+        if (!ocr || ocr.available === false) {
+          byId("ocrTextBox").value =
+            ocr && ocr.error
+              ? "PeekabooWin could not read text from this snapshot.\r\n\r\n" +
+                ocr.error
+              : "PeekabooWin could not read text from this snapshot.";
+          return;
+        }
+
+        if (!lines.length) {
+          byId("ocrTextBox").value =
+            "PeekabooWin did not recognize any readable text in this capture.";
+          return;
+        }
+
+        for (index = 0; index < lines.length; index += 1) {
+          if (!lines[index] || !lines[index].text) {
+            continue;
+          }
+
+          output[output.length] = lines[index].text;
+        }
+
+        byId("ocrTextBox").value = output.join("\r\n");
+      }
+
+      function buildActionTargets(result) {
+        var targets = [];
+        var controls = result && result.elements ? result.elements : [];
+        var ocrLines =
+          result && result.ocr && result.ocr.lines ? result.ocr.lines : [];
+        var seenText = {};
+        var index;
+
+        for (index = 0; index < controls.length; index += 1) {
+          var control = controls[index];
+          var copiedControl = copyObject(control);
+          copiedControl.actionKey = "ui:" + String(control.id || index);
+          copiedControl.sourceKind = "ui-element";
+          targets[targets.length] = copiedControl;
+
+          if (control.name) {
+            seenText[String(control.name).toLowerCase()] = true;
+          }
+        }
+
+        for (index = 0; index < ocrLines.length && index < 12; index += 1) {
+          var line = ocrLines[index];
+          var lineText = trimText(line && line.text ? line.text : "");
+
+          if (!lineText || seenText[lineText.toLowerCase()]) {
+            continue;
+          }
+
+          targets[targets.length] = {
+            actionKey: "ocr:" + String(index),
+            sourceKind: "ocr-line",
+            id: "text " + String(index + 1),
+            name: lineText,
+            text: lineText,
+            controlType: "read text",
+            center: line.center || null,
+            bounds: line.bounds || null,
+          };
+        }
+
+        return targets;
+      }
+
+      function renderElementList(elements) {
+        var list = byId("elementList");
+        var filterText = trimText(byId("elementFilter").value).toLowerCase();
+        list.innerHTML = "";
+
+        var visibleElements = [];
+        var index;
+
+        for (index = 0; index < elements.length; index += 1) {
+          var element = elements[index];
+          var haystack = (
+            buildElementDisplayName(element) +
+            " " +
+            buildElementMeta(element)
+          ).toLowerCase();
+
+          if (filterText && haystack.indexOf(filterText) === -1) {
+            continue;
+          }
+
+          visibleElements[visibleElements.length] = element;
+        }
+
+        if (!visibleElements.length) {
+          var empty = document.createElement("div");
+          empty.className = "element-item last";
+          empty.innerText = filterText
+            ? "Nothing in this snapshot matches that search."
+            : "Peekaboo did not find any indexed controls in this capture.";
+          list.appendChild(empty);
+          return;
+        }
+
+        for (index = 0; index < visibleElements.length; index += 1) {
+          list.appendChild(
+            createElementRow(
+              visibleElements[index],
+              index === visibleElements.length - 1,
+            ),
+          );
+        }
+      }
+
+      function createElementRow(element, isLast) {
+        var row = document.createElement("div");
+        row.className = "element-item" + (isLast ? " last" : "");
+        row.setAttribute("data-element-id", element.actionKey || "");
+        row.onclick = function () {
+          selectElement(element.actionKey || "", element);
+        };
+
+        var name = document.createElement("div");
+        name.className = "element-name";
+        name.innerText = buildElementDisplayName(element);
+        row.appendChild(name);
+
+        var meta = document.createElement("div");
+        meta.className = "element-meta";
+        meta.innerText = buildElementMeta(element);
+        row.appendChild(meta);
+
+        return row;
+      }
+
+      function selectElement(elementId, element) {
+        state.selectedElementId = elementId;
+        highlightSelectedElement();
+        updateSelectionCallout(element);
+        openStep(3);
+        setActionView("click");
+        updateStepSummaries();
+        setGuide(
+          "That item is selected. You can click it, scroll there, or type into the chosen app.",
+        );
+      }
+
+      function clearElementSelection() {
+        state.selectedElementId = "";
+        highlightSelectedElement();
+        byId("selectionCallout").innerText =
+          "No item is selected yet. Pick one above if you want PeekabooWin to click or scroll there for you.";
+        updateStepSummaries();
+      }
+
+      function highlightSelectedElement() {
+        var rows = byId("elementList").children;
+        var index;
+
+        for (index = 0; index < rows.length; index += 1) {
+          var row = rows[index];
+          var rowId = row.getAttribute("data-element-id") || "";
+
+          if (rowId && rowId === state.selectedElementId) {
+            row.className =
+              row.className.replace(" selected", "") + " selected";
+          } else {
+            row.className = row.className.replace(" selected", "");
+          }
+        }
+      }
+
+      function updateSelectionCallout(element) {
+        if (!element) {
+          return;
+        }
+
+        var text = 'Selected "' + buildElementDisplayName(element) + '". ';
+        text +=
+          element.sourceKind === "ocr-line"
+            ? "PeekabooWin will act on the text it recognized on screen. If the app changed, take another snapshot first."
+            : "You can click it directly, scroll on it, or copy the AI brief so another assistant can continue from the same screen.";
+        byId("selectionCallout").innerText = text;
+      }
+
+      function clickSelectedElement() {
+        var selected = getSelectedElement();
+
+        if (!state.currentSnapshot || !state.selectedElementId || !selected) {
+          appendLog("Select something visible in the snapshot first.", "error");
+          return;
+        }
+
+        withBusy("Clicking the selected control...", function () {
+          if (selected.sourceKind === "ocr-line") {
+            runCliJson([
+              "click",
+              "--on",
+              selected.text || selected.name || "",
+              "--snapshot",
+              state.currentSnapshot.snapshotId,
+              "--exact",
+            ]);
+            appendLog(
+              'Clicked recognized text "' +
+                (selected.text || selected.name || "") +
+                '".',
+            );
+          } else {
+            runCliJson([
+              "snapshot",
+              "click",
+              "--snapshot",
+              state.currentSnapshot.snapshotId,
+              "--element-id",
+              selected.id,
+            ]);
+            appendLog("Clicked control " + selected.id + ".");
+          }
+          setGuide(
+            "Action sent. If the app changed, take another snapshot so PeekabooWin can stay in sync.",
+          );
+        });
+      }
+
+      function scrollSelectedElement(direction) {
+        var selected = getSelectedElement();
+
+        if (!state.currentSnapshot || !state.selectedElementId || !selected) {
+          appendLog("Select something visible in the snapshot first.", "error");
+          return;
+        }
+
+        withBusy("Scrolling on the selected control...", function () {
+          if (selected.sourceKind === "ocr-line") {
+            runCliJson([
+              "scroll",
+              "--on",
+              selected.text || selected.name || "",
+              "--snapshot",
+              state.currentSnapshot.snapshotId,
+              "--direction",
+              direction,
+              "--ticks",
+              "2",
+              "--exact",
+            ]);
+            appendLog(
+              "Scrolled " +
+                direction +
+                ' on recognized text "' +
+                (selected.text || selected.name || "") +
+                '".',
+            );
+          } else {
+            runCliJson([
+              "snapshot",
+              "scroll",
+              "--snapshot",
+              state.currentSnapshot.snapshotId,
+              "--element-id",
+              selected.id,
+              "--direction",
+              direction,
+              "--ticks",
+              "2",
+            ]);
+            appendLog(
+              "Scrolled " + direction + " on control " + selected.id + ".",
+            );
+          }
+          setGuide(
+            "Scrolled the app. If new content appeared, take another snapshot to refresh what PeekabooWin sees.",
+          );
+        });
+      }
+
+      function typeIntoWindow(clearFirst) {
+        var text = byId("typeText").value;
+
+        if (!text) {
+          appendLog("Write the text you want to send first.", "error");
+          return;
+        }
+
+        if (
+          clearFirst &&
+          !window.confirm("Replace the current text in that app?")
+        ) {
+          return;
+        }
+
+        withBusy("Typing into the selected app...", function () {
+          focusSnapshotTargetIfPossible();
+
+          var tempFile = writeUiTextFile(text);
+          var args = ["type", "--text-file", tempFile];
+
+          if (clearFirst) {
+            args[args.length] = "--clear";
+          }
+
+          runCliJson(args);
+          appendLog(
+            "Text sent to the active app" +
+              (clearFirst ? " after replacing the current selection." : "."),
+          );
+          setGuide(
+            "Text sent. If you want your AI to continue, copy the summary after taking a fresh snapshot.",
+          );
+        });
+      }
+
+      function launchApp(preferredTitle) {
+        var command = trimText(byId("launchCommand").value);
+        var launched = false;
+        var launchedResult = null;
+
+        if (!command) {
+          appendLog(
+            "Enter an app command first, for example notepad.exe.",
+            "error",
+          );
+          return;
+        }
+
+        withBusy("Launching the app...", function () {
+          var result = runCliJson(["app", "launch", "--command", command]);
+          launchedResult = result;
+          launched = true;
+          appendLog(
+            'Launched "' +
+              command +
+              '" with process ID ' +
+              result.processId +
+              ".",
+          );
+        });
+
+        if (launched) {
+          refreshWindows();
+          selectLaunchedWindow(launchedResult, preferredTitle);
+          updateStepSummaries();
+          setGuide(
+            "Your app is open. It has been selected for you, so the next step is Take a snapshot.",
+          );
+        }
+      }
+
+      function launchPreset(command, label, preferredTitle) {
+        byId("launchCommand").value = command;
+        appendLog('Practice shortcut selected: "' + label + '".');
+        launchApp(preferredTitle);
+      }
+
+      function selectLaunchedWindow(result, preferredTitle) {
+        if (!result) {
+          return;
+        }
+
+        var select = byId("windowSelect");
+        var hwnd = result.hwnds && result.hwnds.length ? result.hwnds[0] : "";
+
+        if (hwnd) {
+          select.value = hwnd;
+          state.lastWindowHwnd = hwnd;
+          return;
+        }
+
+        if (!result.titles || !result.titles.length) {
+          return;
+        }
+
+        var title = result.titles[0];
+        var index;
+
+        for (index = 0; index < state.windows.length; index += 1) {
+          if (state.windows[index].title === title) {
+            select.value = state.windows[index].hwnd;
+            state.lastWindowHwnd = state.windows[index].hwnd;
+            return;
+          }
+        }
+
+        if (!preferredTitle) {
+          return;
+        }
+
+        for (index = 0; index < state.windows.length; index += 1) {
+          if (
+            String(state.windows[index].title || "")
+              .toLowerCase()
+              .indexOf(String(preferredTitle).toLowerCase()) !== -1
+          ) {
+            select.value = state.windows[index].hwnd;
+            state.lastWindowHwnd = state.windows[index].hwnd;
+            return;
+          }
+        }
+      }
+
+      function focusSnapshotTargetIfPossible() {
+        var hwnd = "";
+        var target =
+          state.currentSnapshot && state.currentSnapshot.result
+            ? state.currentSnapshot.result.target || {}
+            : {};
+
+        if (target.hwnd) {
+          hwnd = target.hwnd;
+        } else if (state.lastWindowHwnd) {
+          hwnd = state.lastWindowHwnd;
+        } else {
+          var selected = getSelectedWindow();
+          hwnd = selected ? selected.hwnd : "";
+        }
+
+        if (hwnd) {
+          runCliJson(["window", "focus", "--hwnd", hwnd]);
+        }
+      }
+
+      function openCurrentImage() {
+        var snapshot = state.currentSnapshot;
+        var result = snapshot && snapshot.result ? snapshot.result : {};
+        var path = result.annotatedPath || result.path;
+
+        if (!path) {
+          appendLog("There is no image to open yet.", "error");
+          return;
+        }
+
+        openPath(path);
+        appendLog("Opened the current capture image.");
+      }
+
+      function withBusy(message, action) {
+        if (state.isBusy) {
+          appendLog(
+            "PeekabooWin is still working on the previous step. Try again in a moment.",
+            "error",
+          );
+          return;
+        }
+
+        state.isBusy = true;
+        setStatus(message, "warn");
+
+        try {
+          action();
+          setStatus("Ready for the next step", "good");
+        } catch (error) {
+          setStatus("Something needs attention", "bad");
+          appendLog(readError(error), "error");
+        } finally {
+          state.isBusy = false;
+        }
+      }
+
+      function runCliJson(args) {
+        var shell = new ActiveXObject("WScript.Shell");
+        var command = "node " + quoteArg(state.cliPath);
+        var index;
+
+        for (index = 0; index < args.length; index += 1) {
+          command += " " + quoteArg(String(args[index]));
+        }
+
+        var exec = shell.Exec(command);
+        var stdout = exec.StdOut.ReadAll();
+        var stderr = exec.StdErr.ReadAll();
+
+        if (exec.ExitCode !== 0) {
+          throw new Error(stderr || stdout || "PeekabooWin returned an error.");
+        }
+
+        try {
+          return JSON.parse(stdout);
+        } catch (error) {
+          throw new Error("PeekabooWin returned invalid JSON: " + stdout);
+        }
+      }
+
+      function quoteArg(value) {
+        if (value === "") {
+          return '""';
+        }
+
+        if (!/[ \t"]/g.test(value)) {
+          return value;
+        }
+
+        var output = '"';
+        var backslashes = 0;
+        var index;
+
+        for (index = 0; index < value.length; index += 1) {
+          var character = value.charAt(index);
+
+          if (character === "\\") {
+            backslashes += 1;
+            continue;
+          }
+
+          if (character === '"') {
+            output += repeatText("\\", backslashes * 2 + 1);
+            output += '"';
+            backslashes = 0;
+            continue;
+          }
+
+          if (backslashes > 0) {
+            output += repeatText("\\", backslashes);
+            backslashes = 0;
+          }
+
+          output += character;
+        }
+
+        if (backslashes > 0) {
+          output += repeatText("\\", backslashes * 2);
+        }
+
+        output += '"';
+        return output;
+      }
+
+      function writeUiTextFile(text) {
+        var path = joinPath(
+          expandEnvironment("%TEMP%"),
+          "peekaboo-win-ui-input.txt",
+        );
+        var stream = new ActiveXObject("ADODB.Stream");
+
+        stream.Type = 2;
+        stream.Charset = "utf-8";
+        stream.Open();
+        stream.WriteText(text);
+        stream.SaveToFile(path, 2);
+        stream.Close();
+
+        return path;
+      }
+
+      function copyText(text) {
+        window.clipboardData.setData("Text", text);
+      }
+
+      function openPath(path) {
+        var shell = new ActiveXObject("WScript.Shell");
+        shell.Run("explorer " + quoteArg(path), 1, false);
+      }
+
+      function detectAppRoot() {
+        var href = String(window.location.href || "");
+        var localPath = href.replace(/^file:\/\//i, "");
+
+        if (
+          localPath.indexOf("/") === 0 &&
+          /^[A-Za-z]:/.test(localPath.substring(1))
+        ) {
+          localPath = localPath.substring(1);
+        }
+
+        localPath = decodeURIComponent(localPath).replace(/\//g, "\\");
+        return new ActiveXObject(
+          "Scripting.FileSystemObject",
+        ).GetParentFolderName(localPath);
+      }
+
+      function filterFriendlyWindows(windows) {
+        var friendly = [];
+        var index;
+
+        for (index = 0; index < windows.length; index += 1) {
+          var item = windows[index];
+
+          if (!item || !item.title) {
+            continue;
+          }
+
+          if (
+            item.title === "Program Manager" ||
+            item.title === "Windows Input Experience" ||
+            item.title === "PeekabooWin" ||
+            item.title === "Pick an app"
+          ) {
+            continue;
+          }
+
+          if (item.bounds && Number(item.bounds.left) <= -32000) {
+            continue;
+          }
+
+          friendly[friendly.length] = item;
+        }
+
+        return friendly;
+      }
+
+      function getSelectedWindow() {
+        var hwnd = byId("windowSelect").value;
+        var index;
+
+        for (index = 0; index < state.windows.length; index += 1) {
+          if (state.windows[index].hwnd === hwnd) {
+            return state.windows[index];
+          }
+        }
+
+        return null;
+      }
+
+      function updateScopeVisibility() {
+        var scope = byId("captureScope").value;
+        byId("windowRow").style.display = scope === "window" ? "block" : "none";
+        byId("windowFilterRow").style.display =
+          scope === "window" ? "block" : "none";
+        byId("screenRow").style.display = scope === "screen" ? "block" : "none";
+        byId("focusWindowButton").disabled = scope !== "window";
+        byId("maximizeWindowButton").disabled = scope !== "window";
+        byId("minimizeWindowButton").disabled = scope !== "window";
+        byId("closeAppButton").disabled = scope !== "window";
+        updateStepSummaries();
+      }
+
+      function openStep(stepNumber) {
+        var steps = [1, 2, 3];
+        var index;
+
+        state.activeStep = stepNumber;
+
+        for (index = 0; index < steps.length; index += 1) {
+          var current = steps[index];
+          var card = byId("step" + current + "Card");
+          var body = byId("step" + current + "Body");
+          var isActive = current === stepNumber;
+
+          card.className =
+            card.className.replace(" active", "") + (isActive ? " active" : "");
+          body.style.display = isActive ? "block" : "none";
+        }
+      }
+
+      function setInspectView(view) {
+        state.inspectView = view;
+        byId("inspectControlsPanel").className =
+          "subpanel" + (view === "controls" ? " active" : "");
+        byId("inspectTextPanel").className =
+          "subpanel" + (view === "text" ? " active" : "");
+        byId("inspectPreviewPanel").className =
+          "subpanel" + (view === "preview" ? " active" : "");
+        setViewButton("inspectControlsTab", view === "controls");
+        setViewButton("inspectTextTab", view === "text");
+        setViewButton("inspectPreviewTab", view === "preview");
+        updateStepSummaries();
+      }
+
+      function setActionView(view) {
+        state.actionView = view;
+        byId("actionClickPanel").className =
+          "subpanel" + (view === "click" ? " active" : "");
+        byId("actionTypePanel").className =
+          "subpanel" + (view === "type" ? " active" : "");
+        byId("actionAiPanel").className =
+          "subpanel" + (view === "ai" ? " active" : "");
+        setViewButton("actionClickTab", view === "click");
+        setViewButton("actionTypeTab", view === "type");
+        setViewButton("actionAiTab", view === "ai");
+        updateStepSummaries();
+      }
+
+      function setViewButton(buttonId, isActive) {
+        byId(buttonId).className = isActive ? "accent" : "secondary";
+      }
+
+      function updateStepSummaries() {
+        var scope = byId("captureScope")
+          ? byId("captureScope").value
+          : "window";
+        var selectedWindow = getSelectedWindow();
+        var selectedElement = getSelectedElement();
+        var step1Text =
+          scope === "screen"
+            ? "Whole screen"
+            : selectedWindow
+              ? truncateText(buildWindowLabel(selectedWindow), 34)
+              : "No app selected";
+        var step2Text = !state.currentSnapshot
+          ? state.snapshots.length
+            ? String(state.snapshots.length) + " saved snapshots"
+            : "No snapshot yet"
+          : state.currentTargets.length
+            ? String(state.currentTargets.length) + " actionable items"
+            : state.currentOcrLines.length
+              ? String(state.currentOcrLines.length) + " text lines"
+              : "Snapshot ready";
+        var step3Text = !state.currentSnapshot
+          ? "Take a snapshot first"
+          : selectedElement
+            ? truncateText(buildElementDisplayName(selectedElement), 28)
+            : state.actionView === "ai"
+              ? "AI handoff ready"
+              : state.actionView === "type"
+                ? "Ready to type"
+                : "Choose an action";
+
+        byId("step1Summary").innerText = step1Text;
+        byId("step2Summary").innerText = step2Text;
+        byId("step3Summary").innerText = step3Text;
+      }
+
+      function getSelectedElement() {
+        var index;
+
+        for (index = 0; index < state.currentTargets.length; index += 1) {
+          if (
+            state.currentTargets[index].actionKey === state.selectedElementId
+          ) {
+            return state.currentTargets[index];
+          }
+        }
+
+        return null;
+      }
+
+      function truncateText(value, maxLength) {
+        var text = String(value || "");
+
+        if (text.length <= maxLength) {
+          return text;
+        }
+
+        return text.substring(0, Math.max(0, maxLength - 1)) + "...";
+      }
+
+      function copyObject(source) {
+        var result = {};
+        var key;
+
+        for (key in source) {
+          if (source.hasOwnProperty(key)) {
+            result[key] = source[key];
+          }
+        }
+
+        return result;
+      }
+
+      function formatSnapshotOption(snapshot) {
+        var target =
+          snapshot.target && snapshot.target.title
+            ? snapshot.target.title
+            : "Whole screen";
+        var timeText = snapshot.createdAt
+          ? formatTime(snapshot.createdAt)
+          : "unknown time";
+        return target + " - " + timeText;
+      }
+
+      function filterUiSnapshots(items) {
+        var filtered = [];
+        var index;
+
+        for (index = 0; index < items.length; index += 1) {
+          var item = items[index];
+
+          if (!item || !item.valid) {
+            continue;
+          }
+
+          if (item.action !== "see-ui") {
+            continue;
+          }
+
+          filtered[filtered.length] = item;
+        }
+
+        return filtered;
+      }
+
+      function buildWindowLabel(item) {
+        var title = trimText(item.title || "");
+        var name = trimText(item.processName || "");
+        var friendlyName = friendlyProcessName(name);
+
+        if (!title) {
+          return friendlyName || "Unnamed app";
+        }
+
+        if (looksTechnicalWindowTitle(title)) {
+          return friendlyName || title;
+        }
+
+        if (!friendlyName) {
+          return title;
+        }
+
+        if (title.toLowerCase() === friendlyName.toLowerCase()) {
+          return friendlyName;
+        }
+
+        return title + " (" + friendlyName + ")";
+      }
+
+      function compareWindowsForPicker(left, right) {
+        var leftPriority = windowPickerPriority(left);
+        var rightPriority = windowPickerPriority(right);
+
+        if (leftPriority !== rightPriority) {
+          return leftPriority - rightPriority;
+        }
+
+        var leftLabel = buildWindowLabel(left).toLowerCase();
+        var rightLabel = buildWindowLabel(right).toLowerCase();
+
+        if (leftLabel === rightLabel) {
+          return 0;
+        }
+
+        return leftLabel < rightLabel ? -1 : 1;
+      }
+
+      function windowPickerPriority(item) {
+        var processName = String(item.processName || "").toLowerCase();
+        var title = String(item.title || "");
+
+        if (looksTechnicalWindowTitle(title)) {
+          return 4;
+        }
+
+        if (processName === "windowsterminal") {
+          return 3;
+        }
+
+        if (processName === "explorer") {
+          return 2;
+        }
+
+        return 1;
+      }
+
+      function looksTechnicalWindowTitle(title) {
+        var text = String(title || "");
+        var lower = text.toLowerCase();
+
+        return (
+          text.indexOf("\\") !== -1 ||
+          lower.indexOf(".exe") !== -1 ||
+          lower.indexOf("system32") !== -1
+        );
+      }
+
+      function friendlyProcessName(name) {
+        var raw = String(name || "");
+        var lower = raw.toLowerCase();
+
+        if (lower === "windowsterminal") {
+          return "Windows Terminal";
+        }
+
+        if (lower === "chrome") {
+          return "Chrome";
+        }
+
+        if (lower === "mshta") {
+          return "PeekabooWin";
+        }
+
+        if (lower === "applicationframehost") {
+          return "Windows app";
+        }
+
+        if (lower === "systemsettings") {
+          return "Settings";
+        }
+
+        if (lower === "notepad") {
+          return "Notepad";
+        }
+
+        if (lower === "explorer") {
+          return "File Explorer";
+        }
+
+        return raw;
+      }
+
+      function formatTime(isoText) {
+        try {
+          return new Date(isoText).toLocaleTimeString();
+        } catch (error) {
+          return isoText;
+        }
+      }
+
+      function buildElementDisplayName(element) {
+        var parts = [];
+
+        if (element.name) {
+          parts[parts.length] = element.name;
+        }
+
+        if (element.controlType) {
+          parts[parts.length] = element.controlType;
+        }
+
+        if (!parts.length && element.id) {
+          parts[parts.length] = element.id;
+        }
+
+        return parts.join(" - ") || "Unnamed control";
+      }
+
+      function buildElementMeta(element) {
+        var meta = [];
+
+        if (element.id) {
+          meta[meta.length] = element.id;
+        }
+
+        if (element.sourceKind === "ocr-line") {
+          meta[meta.length] = "recognized text";
+        }
+
+        if (element.automationId) {
+          meta[meta.length] = "automationId " + element.automationId;
+        }
+
+        if (
+          element.center &&
+          isFinite(element.center.x) &&
+          isFinite(element.center.y)
+        ) {
+          meta[meta.length] =
+            "center " + element.center.x + "," + element.center.y;
+        }
+
+        return meta.join(" | ");
+      }
+
+      function setStatus(text, tone) {
+        var badge = byId("statusBadge");
+        badge.innerText = text;
+        badge.className = "badge " + tone;
+      }
+
+      function setGuide(text) {
+        byId("guideMessage").innerText = text;
+      }
+
+      function appendLog(text, tone) {
+        var log = byId("activityLog");
+        var line = document.createElement("div");
+        var prefix = "[" + formatTime(new Date().toISOString()) + "] ";
+
+        if (tone === "error") {
+          ensurePanelOpen(
+            "activityPanel",
+            "toggleLogButton",
+            "Hide recent steps",
+          );
+        }
+
+        line.className = "log-line" + (tone === "error" ? " error" : "");
+        line.innerText = prefix + text;
+        log.insertBefore(line, log.firstChild);
+      }
+
+      function readError(error) {
+        return error && error.message ? error.message : String(error);
+      }
+
+      function toFileUrl(path) {
+        var normalized = String(path || "").replace(/\\/g, "/");
+
+        if (normalized.charAt(0) !== "/") {
+          normalized = "/" + normalized;
+        }
+
+        return "file://" + encodeURI(normalized);
+      }
+
+      function joinPath(left, right) {
+        if (!left) {
+          return right;
+        }
+
+        if (!right) {
+          return left;
+        }
+
+        if (/[\\\/]$/.test(left)) {
+          return left + right;
+        }
+
+        return left + "\\" + right;
+      }
+
+      function repeatText(value, count) {
+        var output = "";
+        var index;
+
+        for (index = 0; index < count; index += 1) {
+          output += value;
+        }
+
+        return output;
+      }
+
+      function expandEnvironment(value) {
+        return new ActiveXObject("WScript.Shell").ExpandEnvironmentStrings(
+          value,
+        );
+      }
+
+      function toggleAdvancedPanel() {
+        var panel = byId("advancedPanel");
+        var button = byId("showAdvancedButton");
+        var isOpen = panel.style.display === "block";
+
+        panel.style.display = isOpen ? "none" : "block";
+        button.innerText = isOpen
+          ? "Show advanced options"
+          : "Hide advanced options";
+      }
+
+      function togglePanel(panelId, buttonId, showText, hideText) {
+        var panel = byId(panelId);
+        var button = byId(buttonId);
+        var isOpen = panel.style.display === "block";
+
+        panel.style.display = isOpen ? "none" : "block";
+        button.innerText = isOpen ? showText : hideText;
+      }
+
+      function ensurePanelOpen(panelId, buttonId, hideText) {
+        var panel = byId(panelId);
+        var button = byId(buttonId);
+
+        if (panel.style.display === "block") {
+          return;
+        }
+
+        panel.style.display = "block";
+        button.innerText = hideText;
+      }
+
+      function trimText(value) {
+        return String(value || "").replace(/^\s+|\s+$/g, "");
+      }
+
+      function byId(id) {
+        return document.getElementById(id);
+      }
+    </script>
+  </body>
+</html>

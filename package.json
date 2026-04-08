@@ -1,0 +1,52 @@
+{
+  "name": "peekaboo-windows",
+  "version": "0.1.0",
+  "description": "Windows-first Peekaboo-inspired desktop automation sidecar with a CLI, MCP server, OCR, and guided UI",
+  "type": "module",
+  "license": "MIT",
+  "author": "Eriks Strals",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FelixKruger/peekaboo-win.git"
+  },
+  "homepage": "https://github.com/FelixKruger/peekaboo-win#readme",
+  "bugs": {
+    "url": "https://github.com/FelixKruger/peekaboo-win/issues"
+  },
+  "keywords": [
+    "windows",
+    "desktop-automation",
+    "mcp",
+    "ocr",
+    "claude-code",
+    "peekaboo",
+    "ai"
+  ],
+  "files": [
+    "bin/",
+    "docs/claude-code.md",
+    "scripts/",
+    "src/",
+    "CREDITS.md",
+    "LICENSE",
+    "PeekabooWin.hta",
+    "README.md",
+    ".mcp.json"
+  ],
+  "bin": {
+    "peekaboo-win": "./bin/peekaboo-win.js",
+    "peekaboo-win-mcp": "./bin/peekaboo-win-mcp.js"
+  },
+  "scripts": {
+    "test": "node ./test/run-tests.js",
+    "start": "node ./bin/peekaboo-win-mcp.js",
+    "cli": "node ./bin/peekaboo-win.js",
+    "ui": "powershell -NoLogo -NoProfile -Command \"$p = (Resolve-Path '.\\\\PeekabooWin.hta').Path; Start-Process mshta.exe -ArgumentList ('\\\"' + $p + '\\\"')\""
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "os": [
+    "win32"
+  ]
+}

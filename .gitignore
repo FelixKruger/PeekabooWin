@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# Runtime data
+.peekaboo-windows/
+exports/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Environment
+.env
+.env.*
+.env.local
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
+._*
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.bak
+
+# Build artifacts
+dist/
+build/
+
+# Internal docs (not for public)
+docs/claude-handoff.md
+
+# Plugin state
+.omc/
