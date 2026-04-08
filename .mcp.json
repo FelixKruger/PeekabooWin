@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "peekaboo-win": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["./bin/peekaboo-win-mcp.js"]
+    }
+  }
+}
