@@ -341,7 +341,7 @@ peekaboo-win dialog click [--title <text> | --hwnd <id> | --process-id <id> | --
 ### Higher-Level AI Helpers
 
 ```text
-peekaboo-win harvest text [--snapshot <id|latest> | --mode screen|window [--hwnd <id> | --title <text>] [--screen-index <n>]] [--label <text>] [--x <n> --y <n>] [--direction up|down] [--ticks <n>] [--max-steps <n>] [--stop-after-stalled-steps <n>] [--output <path>] [--overwrite]
+peekaboo-win harvest text [--snapshot <id|latest> | --mode screen|window [--hwnd <id> | --title <text>] [--screen-index <n>]] [--label <text>] [--x <n> --y <n>] [--direction up|down] [--ticks <n>] [--max-steps <n>] [--stop-after-stalled-steps <n>] [--overlap-window <n>] [--fuzzy-threshold <ratio>] [--pause-after-scroll-ms <n>] [--output <path>] [--overwrite]
 peekaboo-win recipe list
 peekaboo-win recipe run --id <recipe-id> [--snapshot <id|latest> | --mode screen|window [--hwnd <id> | --title <text>] [--screen-index <n>]] [--label <text>] [--text <text>] [--command <program>] [--output <path>] [--overwrite]
 peekaboo-win goal plan --text "<goal>" [--snapshot <id|latest> | --mode screen|window [--hwnd <id> | --title <text>] [--screen-index <n>]]
