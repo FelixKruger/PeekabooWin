@@ -6,6 +6,10 @@ import { PassThrough } from "node:stream";
 
 import { buildSnapshotAiBrief } from "../src/ai-bridge.js";
 import {
+  runPipeRelay,
+  startPipeSidecar,
+} from "../bin/peekaboo-win-bridge.js";
+import {
   harvestScrollText,
   levenshteinRatio,
   mergeHarvestLines,
@@ -28,6 +32,7 @@ import {
 } from "../src/workflow/runner.js";
 
 async function main() {
+  await testNamedPipeBridge();
   await testInitialize();
   await testToolsList();
   await testSnapshotHelpers();
@@ -40,6 +45,51 @@ async function main() {
   await testWorkflowRunner();
   testHotkeys();
   process.stdout.write("All tests passed.\n");
+}
+
+async function testNamedPipeBridge() {
+  const pipeName = `peekaboo-win-test-${process.pid}-${Date.now()}`;
+  const relayInput = new PassThrough();
+  const relayOutput = new PassThrough();
+  let raw = "";
+
+  relayOutput.on("data", (chunk) => {
+    raw += chunk.toString("utf8");
+  });
+
+  const sidecar = await startPipeSidecar({
+    pipeName,
+    createChild: () => {
+      const stdin = new PassThrough();
+      const stdout = new PassThrough();
+
+      stdin.on("data", (chunk) => stdout.write(chunk));
+      stdin.on("end", () => stdout.end());
+
+      return {
+        stdin,
+        stdout,
+        stderr: new PassThrough(),
+        kill() {},
+      };
+    },
+  });
+
+  try {
+    const relayPromise = runPipeRelay({
+      pipeName,
+      input: relayInput,
+      output: relayOutput,
+    });
+    relayInput.end('{"jsonrpc":"2.0","id":1,"method":"tools/list"}\n');
+    await relayPromise;
+    assert.equal(
+      raw,
+      '{"jsonrpc":"2.0","id":1,"method":"tools/list"}\n',
+    );
+  } finally {
+    await sidecar.close();
+  }
 }
 
 async function testInitialize() {
