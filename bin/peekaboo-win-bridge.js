@@ -97,10 +97,7 @@ export async function runPipeRelay({
   const pipePath = buildPipePath(pipeName);
 
   await new Promise((resolve, reject) => {
-    const socket = net.createConnection({
-      path: pipePath,
-      allowHalfOpen: true,
-    });
+    const socket = net.createConnection(pipePath);
     let settled = false;
     const cleanup = () => {
       input.off("error", onError);

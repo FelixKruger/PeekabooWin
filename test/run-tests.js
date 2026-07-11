@@ -35,6 +35,7 @@ import {
 
 async function main() {
   await testNamedPipeBridgePersistentSession();
+  await testRelaySettlesWhenChildExits();
   await testOldConnectionCannotKillNewChild();
   await testInitialize();
   await testToolsList();
@@ -48,6 +49,39 @@ async function main() {
   await testWorkflowRunner();
   testHotkeys();
   process.stdout.write("All tests passed.\n");
+}
+
+async function testRelaySettlesWhenChildExits() {
+  const pipeName = `peekaboo-win-exit-${process.pid}-${Date.now()}`;
+  let child;
+  const sidecar = await startPipeSidecar({
+    pipeName,
+    createChild: () => {
+      child = createFakeMcpChild();
+      return child;
+    },
+  });
+  const relayInput = new PassThrough();
+  const relayOutput = new PassThrough();
+
+  try {
+    const relayPromise = runPipeRelay({
+      pipeName,
+      input: relayInput,
+      output: relayOutput,
+    });
+    await waitFor(() => child !== undefined);
+    child.stdout.end();
+    child.emit("exit", 1, null);
+    const settled = await Promise.race([
+      relayPromise.then(() => true),
+      new Promise((resolve) => setTimeout(() => resolve(false), 100)),
+    ]);
+    assert.equal(settled, true);
+  } finally {
+    relayInput.destroy();
+    await sidecar.close();
+  }
 }
 
 async function testNamedPipeBridgePersistentSession() {
