@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
+import { EventEmitter } from "node:events";
 import fs from "node:fs/promises";
+import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { PassThrough } from "node:stream";
@@ -32,7 +34,8 @@ import {
 } from "../src/workflow/runner.js";
 
 async function main() {
-  await testNamedPipeBridge();
+  await testNamedPipeBridgePersistentSession();
+  await testOldConnectionCannotKillNewChild();
   await testInitialize();
   await testToolsList();
   await testSnapshotHelpers();
@@ -47,32 +50,14 @@ async function main() {
   process.stdout.write("All tests passed.\n");
 }
 
-async function testNamedPipeBridge() {
+async function testNamedPipeBridgePersistentSession() {
   const pipeName = `peekaboo-win-test-${process.pid}-${Date.now()}`;
   const relayInput = new PassThrough();
   const relayOutput = new PassThrough();
-  let raw = "";
-
-  relayOutput.on("data", (chunk) => {
-    raw += chunk.toString("utf8");
-  });
 
   const sidecar = await startPipeSidecar({
     pipeName,
-    createChild: () => {
-      const stdin = new PassThrough();
-      const stdout = new PassThrough();
-
-      stdin.on("data", (chunk) => stdout.write(chunk));
-      stdin.on("end", () => stdout.end());
-
-      return {
-        stdin,
-        stdout,
-        stderr: new PassThrough(),
-        kill() {},
-      };
-    },
+    createChild: () => createFakeMcpChild(),
   });
 
   try {
@@ -81,14 +66,142 @@ async function testNamedPipeBridge() {
       input: relayInput,
       output: relayOutput,
     });
-    relayInput.end('{"jsonrpc":"2.0","id":1,"method":"tools/list"}\n');
+    const firstResponse = waitForJsonLine(relayOutput);
+    relayInput.write('{"jsonrpc":"2.0","id":1,"method":"tools/list"}\n');
+    assert.equal((await firstResponse).id, 1);
+    assert.equal(relayInput.writableEnded, false);
+
+    const secondResponse = waitForJsonLine(relayOutput);
+    relayInput.write('{"jsonrpc":"2.0","id":2,"method":"tools/list"}\n');
+    assert.equal((await secondResponse).id, 2);
+    relayInput.end();
     await relayPromise;
-    assert.equal(
-      raw,
-      '{"jsonrpc":"2.0","id":1,"method":"tools/list"}\n',
-    );
+
+    const reconnectInput = new PassThrough();
+    const reconnectOutput = new PassThrough();
+    const reconnectPromise = runPipeRelay({
+      pipeName,
+      input: reconnectInput,
+      output: reconnectOutput,
+    });
+    const reconnectResponse = waitForJsonLine(reconnectOutput);
+    reconnectInput.write('{"jsonrpc":"2.0","id":3,"method":"tools/list"}\n');
+    assert.equal((await reconnectResponse).id, 3);
+    reconnectInput.end();
+    await reconnectPromise;
   } finally {
     await sidecar.close();
+  }
+}
+
+async function testOldConnectionCannotKillNewChild() {
+  const pipeName = `peekaboo-win-race-${process.pid}-${Date.now()}`;
+  const children = [];
+  const sidecar = await startPipeSidecar({
+    pipeName,
+    createChild: () => {
+      const child = createFakeMcpChild();
+      children.push(child);
+      return child;
+    },
+  });
+
+  try {
+    const firstSocket = net.createConnection({
+      path: sidecar.pipePath,
+      allowHalfOpen: true,
+    });
+    await new Promise((resolve, reject) => {
+      firstSocket.once("connect", resolve);
+      firstSocket.once("error", reject);
+    });
+    await waitFor(() => children.length === 1);
+    children[0].emit("exit", 0, null);
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const busySocket = net.createConnection(sidecar.pipePath);
+    await new Promise((resolve, reject) => {
+      busySocket.once("connect", resolve);
+      busySocket.once("error", reject);
+    });
+    await new Promise((resolve) => busySocket.once("close", resolve));
+    assert.equal(children.length, 1);
+    firstSocket.destroy();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const secondSocket = net.createConnection(sidecar.pipePath);
+    await new Promise((resolve, reject) => {
+      secondSocket.once("connect", resolve);
+      secondSocket.once("error", reject);
+    });
+    await waitFor(() => children.length === 2);
+    assert.equal(children[1].killedByBridge, false);
+    secondSocket.destroy();
+  } finally {
+    await sidecar.close();
+  }
+}
+
+function createFakeMcpChild() {
+  const child = new EventEmitter();
+  child.stdin = new PassThrough();
+  child.stdout = new PassThrough();
+  child.stderr = new PassThrough();
+  child.killedByBridge = false;
+  let buffer = "";
+
+  child.stdin.on("data", (chunk) => {
+    buffer += chunk.toString("utf8");
+    for (;;) {
+      const newline = buffer.indexOf("\n");
+      if (newline < 0) break;
+      const request = JSON.parse(buffer.slice(0, newline));
+      buffer = buffer.slice(newline + 1);
+      setTimeout(() => {
+        child.stdout.write(`${JSON.stringify({ jsonrpc: "2.0", id: request.id, result: {} })}\n`);
+      }, 5);
+    }
+  });
+  child.stdin.on("end", () => {
+    child.stdout.end();
+    child.emit("exit", 0, null);
+  });
+  child.kill = () => {
+    child.killedByBridge = true;
+    child.stdin.destroy();
+    child.stdout.end();
+  };
+  return child;
+}
+
+function waitForJsonLine(stream) {
+  return new Promise((resolve, reject) => {
+    let buffer = "";
+    const onData = (chunk) => {
+      buffer += chunk.toString("utf8");
+      const newline = buffer.indexOf("\n");
+      if (newline < 0) return;
+      cleanup();
+      resolve(JSON.parse(buffer.slice(0, newline)));
+    };
+    const cleanup = () => {
+      stream.off("data", onData);
+      stream.off("error", onError);
+    };
+    const onError = (error) => {
+      cleanup();
+      reject(error);
+    };
+    stream.on("data", onData);
+    stream.on("error", onError);
+  });
+}
+
+async function waitFor(predicate, timeoutMs = 1000) {
+  const deadline = Date.now() + timeoutMs;
+  while (!predicate()) {
+    if (Date.now() >= deadline) throw new Error("Timed out waiting for test state");
+    await new Promise((resolve) => setTimeout(resolve, 5));
   }
 }
 

@@ -23,57 +23,57 @@ export async function startPipeSidecar({
   createChild = createPeekabooChild,
 } = {}) {
   const pipePath = buildPipePath(pipeName);
-  let activeSocket = null;
-  let activeChild = null;
+  let activeConnection = null;
 
-  const server = net.createServer((socket) => {
-    if (activeSocket) {
-      socket.destroy(new Error("PeekabooWin bridge already has an active client"));
+  const server = net.createServer({ allowHalfOpen: true }, (socket) => {
+    if (activeConnection) {
+      socket.destroy();
       return;
     }
 
-    activeSocket = socket;
-    activeChild = createChild();
-    socket.pipe(activeChild.stdin);
-    activeChild.stdout.pipe(socket);
+    const child = createChild();
+    const connection = { socket, child };
+    activeConnection = connection;
+    socket.pipe(child.stdin);
+    child.stdout.pipe(socket);
 
-    if (activeChild.stderr) {
-      activeChild.stderr.pipe(process.stderr, { end: false });
-    }
+    child.stderr?.resume?.();
 
-    const release = () => {
-      if (activeSocket === socket) {
-        activeSocket = null;
-        activeChild = null;
-      }
-    };
-
+    socket.once("error", () => {});
     socket.once("close", () => {
-      activeChild?.kill?.();
-      release();
+      child.kill?.();
+      if (activeConnection === connection) {
+        activeConnection = null;
+      }
     });
-    activeChild.once?.("exit", () => {
+    child.once?.("exit", () => {
       socket.end();
-      release();
     });
-    activeChild.once?.("error", (error) => {
+    child.once?.("error", (error) => {
       process.stderr.write(`PeekabooWin MCP child failed: ${error.message}\n`);
       socket.destroy(error);
-      release();
     });
   });
 
   await new Promise((resolve, reject) => {
     server.once("error", reject);
-    server.listen(pipePath, resolve);
+    server.listen(
+      {
+        path: pipePath,
+        readableAll: false,
+        writableAll: false,
+      },
+      resolve,
+    );
   });
 
   return {
     pipePath,
     close: () =>
       new Promise((resolve, reject) => {
-        activeSocket?.destroy();
-        activeChild?.kill?.();
+        activeConnection?.socket.destroy();
+        activeConnection?.child.kill?.();
+        activeConnection = null;
         server.close((error) => (error ? reject(error) : resolve()));
       }),
   };
@@ -87,13 +87,30 @@ export async function runPipeRelay({
   const pipePath = buildPipePath(pipeName);
 
   await new Promise((resolve, reject) => {
-    const socket = net.createConnection(pipePath);
+    const socket = net.createConnection({
+      path: pipePath,
+      allowHalfOpen: true,
+    });
+    let settled = false;
+    const cleanup = () => {
+      input.off("error", onError);
+      output.off("error", onError);
+    };
+    const finish = (error) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      if (error) reject(error);
+      else resolve();
+    };
+    const onError = (error) => finish(error);
+
     socket.once("connect", () => input.pipe(socket));
     socket.pipe(output, { end: false });
-    socket.once("close", resolve);
-    socket.once("error", reject);
-    input.once("error", reject);
-    output.once("error", reject);
+    socket.once("close", () => finish());
+    socket.once("error", onError);
+    input.once("error", onError);
+    output.once("error", onError);
   });
 }
 
