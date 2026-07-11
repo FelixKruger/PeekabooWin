@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const mcpPath = path.join(__dirname, "peekaboo-win-mcp.js");
 const defaultPipeName = "peekaboo-win-codex";
+const defaultIdleTimeoutMs = 30 * 60 * 1000;
 
 export function buildPipePath(pipeName = defaultPipeName) {
   if (!/^[a-z0-9._-]+$/i.test(pipeName)) {
@@ -23,6 +24,7 @@ export async function startPipeSidecar({
   pipeName = defaultPipeName,
   appHome,
   createChild,
+  idleTimeoutMs = defaultIdleTimeoutMs,
   log = () => {},
 } = {}) {
   const pipePath = buildPipePath(pipeName);
@@ -40,8 +42,49 @@ export async function startPipeSidecar({
     const connection = { socket, child };
     activeConnection = connection;
     log(`Accepted MCP client; child PID ${child.pid ?? "test"}`);
+
+    // Backstop against orphaned/half-open connections: if neither direction
+    // sees any traffic for idleTimeoutMs, reclaim the slot. Covers the case
+    // where an upstream client dies without EOFing the relay, so the socket
+    // never emits `end`/`close` and the connection would otherwise pin the
+    // single-client lock forever. Any byte in either direction re-arms it.
+    //
+    // Because a dumb pipe cannot tell "client gone" from "child busy on a
+    // silent request", this timeout doubles as a max-silence ceiling: a live
+    // connection that stays fully quiet longer than idleTimeoutMs is reaped
+    // too. The default is set well above any realistic gap between MCP calls;
+    // tune via --idle-timeout / PEEKABOO_WINDOWS_IDLE_TIMEOUT_MS (0 disables).
+    let idleTimer = null;
+    let closed = false;
+    const clearIdleTimer = () => {
+      if (idleTimer) {
+        clearTimeout(idleTimer);
+        idleTimer = null;
+      }
+    };
+    const armIdleTimer = () => {
+      if (closed || !idleTimeoutMs) return;
+      clearIdleTimer();
+      idleTimer = setTimeout(() => {
+        log(`Idle timeout after ${idleTimeoutMs}ms; reclaiming connection`);
+        socket.destroy();
+      }, idleTimeoutMs);
+      idleTimer.unref?.();
+    };
+    const onActivity = () => armIdleTimer();
+    const teardown = () => {
+      if (closed) return;
+      closed = true;
+      clearIdleTimer();
+      socket.off("data", onActivity);
+      child.stdout?.off?.("data", onActivity);
+    };
+
     socket.pipe(child.stdin);
     child.stdout.pipe(socket);
+    socket.on("data", onActivity);
+    child.stdout.on("data", onActivity);
+    armIdleTimer();
 
     child.stderr?.resume?.();
 
@@ -49,6 +92,7 @@ export async function startPipeSidecar({
       log(`Client socket error: ${error.message}`);
     });
     socket.once("close", () => {
+      teardown();
       child.kill?.();
       if (activeConnection === connection) {
         activeConnection = null;
@@ -56,10 +100,12 @@ export async function startPipeSidecar({
       log("MCP client disconnected");
     });
     child.once?.("exit", (code, signal) => {
+      teardown();
       log(`MCP child exited code=${code ?? "null"} signal=${signal ?? "null"}`);
       socket.end();
     });
     child.once?.("error", (error) => {
+      teardown();
       log(`MCP child failed: ${error.message}`);
       socket.destroy(error);
     });
@@ -149,6 +195,7 @@ async function main() {
     const sidecar = await startPipeSidecar({
       pipeName,
       appHome: readOption("--home"),
+      idleTimeoutMs: resolveIdleTimeoutMs(),
       log,
     });
     log(`Sidecar PID ${process.pid} listening on ${sidecar.pipePath}`);
@@ -169,6 +216,20 @@ async function main() {
   }
 
   throw new Error("Usage: peekaboo-win-bridge.js <sidecar|relay>");
+}
+
+function resolveIdleTimeoutMs() {
+  const raw =
+    readOption("--idle-timeout") ??
+    process.env.PEEKABOO_WINDOWS_IDLE_TIMEOUT_MS;
+  if (raw === undefined) return defaultIdleTimeoutMs;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw new Error(
+      "--idle-timeout (or PEEKABOO_WINDOWS_IDLE_TIMEOUT_MS) must be a non-negative number of milliseconds (0 disables)",
+    );
+  }
+  return parsed;
 }
 
 function readOption(name) {

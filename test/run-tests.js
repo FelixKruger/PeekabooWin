@@ -37,6 +37,9 @@ async function main() {
   await testNamedPipeBridgePersistentSession();
   await testRelaySettlesWhenChildExits();
   await testOldConnectionCannotKillNewChild();
+  await testIdleConnectionReclaimsSlot();
+  await testActivityResetsIdleTimer();
+  await testLateChildOutputDoesNotRearmTimer();
   await testInitialize();
   await testToolsList();
   await testSnapshotHelpers();
@@ -171,6 +174,138 @@ async function testOldConnectionCannotKillNewChild() {
     await waitFor(() => children.length === 2);
     assert.equal(children[1].killedByBridge, false);
     secondSocket.destroy();
+  } finally {
+    await sidecar.close();
+  }
+}
+
+async function testIdleConnectionReclaimsSlot() {
+  const pipeName = `peekaboo-win-idle-${process.pid}-${Date.now()}`;
+  const children = [];
+  const sidecar = await startPipeSidecar({
+    pipeName,
+    idleTimeoutMs: 50,
+    createChild: () => {
+      const child = createFakeMcpChild();
+      children.push(child);
+      return child;
+    },
+  });
+
+  try {
+    // Simulate a frozen orphan: connect, then send nothing and never close or
+    // half-close (no data, no EOF, no FIN). Without the idle backstop the
+    // single-client lock would be pinned forever.
+    const orphanSocket = net.createConnection({
+      path: sidecar.pipePath,
+      allowHalfOpen: true,
+    });
+    await new Promise((resolve, reject) => {
+      orphanSocket.once("connect", resolve);
+      orphanSocket.once("error", reject);
+    });
+    await waitFor(() => children.length === 1);
+
+    // Idle timeout must reclaim the slot (kill the orphaned child).
+    await waitFor(() => children[0].killedByBridge === true, 2000);
+
+    // With the slot released, a fresh client is accepted and gets a new child.
+    const nextSocket = net.createConnection({
+      path: sidecar.pipePath,
+      allowHalfOpen: true,
+    });
+    await new Promise((resolve, reject) => {
+      nextSocket.once("connect", resolve);
+      nextSocket.once("error", reject);
+    });
+    await waitFor(() => children.length === 2);
+    assert.equal(children[1].killedByBridge, false);
+    nextSocket.destroy();
+  } finally {
+    await sidecar.close();
+  }
+}
+
+async function testActivityResetsIdleTimer() {
+  const pipeName = `peekaboo-win-reset-${process.pid}-${Date.now()}`;
+  const children = [];
+  const sidecar = await startPipeSidecar({
+    pipeName,
+    idleTimeoutMs: 100,
+    createChild: () => {
+      const child = createFakeMcpChild();
+      children.push(child);
+      return child;
+    },
+  });
+
+  try {
+    const socket = net.createConnection({
+      path: sidecar.pipePath,
+      allowHalfOpen: true,
+    });
+    await new Promise((resolve, reject) => {
+      socket.once("connect", resolve);
+      socket.once("error", reject);
+    });
+    await waitFor(() => children.length === 1);
+
+    // Drive traffic every 40ms for ~240ms — well past the 100ms timeout. Each
+    // request (and its echoed response) must re-arm the timer, so the child
+    // stays alive throughout despite the short idle window.
+    for (let i = 0; i < 6; i++) {
+      socket.write(`{"jsonrpc":"2.0","id":${i},"method":"tools/list"}\n`);
+      await new Promise((resolve) => setTimeout(resolve, 40));
+    }
+    assert.equal(children[0].killedByBridge, false);
+
+    // Traffic stops: the timer must now elapse and reap the child.
+    await waitFor(() => children[0].killedByBridge === true, 2000);
+    socket.destroy();
+  } finally {
+    await sidecar.close();
+  }
+}
+
+async function testLateChildOutputDoesNotRearmTimer() {
+  const pipeName = `peekaboo-win-late-${process.pid}-${Date.now()}`;
+  const logs = [];
+  let child;
+  const sidecar = await startPipeSidecar({
+    pipeName,
+    idleTimeoutMs: 50,
+    log: (message) => logs.push(message),
+    createChild: () => {
+      child = createFakeMcpChild();
+      return child;
+    },
+  });
+
+  try {
+    const socket = net.createConnection({
+      path: sidecar.pipePath,
+      allowHalfOpen: true,
+    });
+    await new Promise((resolve, reject) => {
+      socket.once("connect", resolve);
+      socket.once("error", reject);
+    });
+    await waitFor(() => child !== undefined);
+    socket.once("error", () => {});
+
+    // Tear the connection down via child exit, then simulate buffered output
+    // arriving late. The data listener is removed and the closed flag guards
+    // armIdleTimer, so no new timer (and no misleading reclaim log) may appear.
+    child.emit("exit", 0, null);
+    await waitFor(() => logs.some((m) => m.startsWith("MCP child exited")));
+    child.stdout.write("late\n");
+    await new Promise((resolve) => setTimeout(resolve, 150));
+
+    assert.equal(
+      logs.some((m) => m.startsWith("Idle timeout")),
+      false,
+    );
+    socket.destroy();
   } finally {
     await sidecar.close();
   }
